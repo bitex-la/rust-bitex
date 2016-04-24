@@ -1,0 +1,18 @@
+[package]
+name = "bitex"
+version = "0.1.0"
+authors = ["Nubis <yo@nubis.im>"]
+description = "Bitex API client in rust"
+repository = "https://github.com/bitex-la/rust-bitex"
+keywords = ["bitex", "bitcoin", "exchange", "payments"]
+license = "WTFPL"
+
+[dependencies]
+curs = "0.1.1"
+mime_guess = "=1.4.0"
+serde = "0.7"
+serde_json = "0.7"
+serde_macros = "0.7.2"
+
+[dev-dependencies]
+http_stub = "0.1.2"
