@@ -12,6 +12,7 @@ curs = { version = "^0.1.2", git = "https://github.com/bitex-la/rust-curs.git", 
 serde_macros = { version = "^0.8.0", git = "https://github.com/nubis/serde.git" }
 serde = { version = "^0.8.0", git = "https://github.com/nubis/serde.git" }
 mime_guess = "=1.4.0"
+decimal = "0.5.0"
 
 [dev-dependencies]
 http_stub = "0.1.2"

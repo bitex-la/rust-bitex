@@ -1,21 +1,13 @@
-#![feature(custom_derive, plugin)]
+#![feature(custom_derive, plugin, macro_reexport)]
 #![plugin(serde_macros)]
 
+#[macro_use]
 pub extern crate curs;
 extern crate mime_guess;
 
-use std::fs::File;
-use std::path::Path;
-use curs::hyper::client::{Client, IntoUrl};
 pub use curs::hyper::client::response::Response;
-use curs::hyper::error::Error as HyperError;
 pub use curs::hyper::method::Method;
-use std::io::Error as IoError;
-use std::io::Read;
-use std::fmt;
-use std::fmt::Write;
-use curs::hyper::mime::{Mime, TopLevel, SubLevel};
-use curs::{CursResult, Request, DecodableResult, Param, Params};
+use curs::{CursResult, DecodableResult, Params};
 use curs::serde::{Deserialize, Deserializer};
 use curs::serde::d128;
 use curs::serde::de::impls::{TupleVisitor4, TupleVisitor12};
@@ -29,10 +21,10 @@ pub struct Api<'a> {
 }
 
 type OrderVisitor =
-  TupleVisitor12<i64, i64, i64, i64, f64, f64, f64, i64, i64, f64, Option<String>, f64>;
+  TupleVisitor12<i64, i64, i64, i64, d128, d128, d128, i64, i64, d128, Option<String>, d128>;
 
 type OrderTuple =
-  (i64, i64, i64, i64, f64, f64, f64, i64, i64, f64, Option<String>, f64);
+  (i64, i64, i64, i64, d128, d128, d128, i64, i64, d128, Option<String>, d128);
 
 macro_rules! make_order_endpoint {
   ($name:ident, $api:ident, $order_type_value:expr, $endpoint_name:expr) => (
@@ -46,7 +38,7 @@ macro_rules! make_order_endpoint {
         self.api.private_get(&["private/", $endpoint_name, "/", &*(id.to_string())].concat(), vec![])
       }
 
-      pub fn create(&self, amount: f64, price: f64) -> CursResult<$name> {
+      pub fn create(&self, amount: d128, price: d128) -> CursResult<$name> {
         self.api.private_post("private/bids",
           vec![("amount", &*amount.to_string()), ("price", &*price.to_string())])
       }
@@ -57,14 +49,14 @@ macro_rules! make_order_endpoint {
       pub id: i64,
       pub creation: i64,
       pub orderbook: i64,
-      pub amount_to_spend: f64,
-      pub remaining_amount: f64,
-      pub price: f64,
+      pub amount_to_spend: d128,
+      pub remaining_amount: d128,
+      pub price: d128,
       pub status: i64,
       pub cancelation_reason: i64,
-      pub produced_amount: f64,
+      pub produced_amount: d128,
       pub issuer: Option<String>,
-      pub fees_paid: f64
+      pub fees_paid: d128
     }
 
     impl $name {
@@ -129,12 +121,12 @@ pub struct Transaction {
   pub timestamp: i64,
   pub id: i64,
   /// The price that was paid per bitcoin.
-  pub price: f64,
+  pub price: d128,
   /// The bitcoin amount sold.
-  pub amount: f64
+  pub amount: d128
 }
 
-type TransactionVisitor = TupleVisitor4<i64, i64, f64, f64>; 
+type TransactionVisitor = TupleVisitor4<i64, i64, d128, d128>; 
 
 impl Deserialize for Transaction {
   fn deserialize<D: Deserializer>(d: &mut D) -> Result<Transaction, D::Error>{
@@ -145,13 +137,13 @@ impl Deserialize for Transaction {
 
 #[derive(Deserialize, Debug)]
 pub struct Profile {
-  pub usd_balance: f64,
-  pub usd_reserved: f64,
-  pub usd_available: f64,
-  pub btc_balance: f64,
-  pub btc_reserved: f64,
-  pub btc_available: f64,
-  pub fee: f64,
+  pub usd_balance: d128,
+  pub usd_reserved: d128,
+  pub usd_available: d128,
+  pub btc_balance: d128,
+  pub btc_reserved: d128,
+  pub btc_available: d128,
+  pub fee: d128,
   pub btc_deposit_address: String,
   pub more_mt_deposit_code: String
 }
