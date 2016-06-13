@@ -175,7 +175,7 @@ impl<'a> Api<'a> {
 
   /// Shortcut if you just want a sandbox Api client.
   pub fn sandbox() -> Api<'a>{
-    Api{ key: "", url_base: PRODUCTION_URL_BASE}
+    Api{ key: "", url_base: SANDBOX_URL_BASE}
   }
 
   // Set the current API key for authenticated requests.
