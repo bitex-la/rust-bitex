@@ -1,9 +1,8 @@
 #![feature(custom_derive, plugin)]
 #![plugin(serde_macros)]
 
-extern crate curs;
+pub extern crate curs;
 extern crate mime_guess;
-extern crate serde;
 
 use std::fs::File;
 use std::path::Path;
@@ -18,11 +17,9 @@ use std::fmt::Write;
 use curs::hyper::mime::{Mime, TopLevel, SubLevel};
 use curs::{CursResult, Request, DecodableResult, Param, Params};
 use curs::serde::{Deserialize, Deserializer};
-use curs::serde::de::impls::TupleVisitor12;
-
+use curs::serde::d128;
+use curs::serde::de::impls::{TupleVisitor4, TupleVisitor12};
 pub use curs::hyper::status::StatusCode;
-
-#[doc(no_inline)]
 pub use curs::hyper::header::{Headers, Header, HeaderFormat, UserAgent, ContentType};
 
 #[derive(Debug, Clone)]
@@ -123,8 +120,27 @@ impl Deserialize for Order {
 
 #[derive(Deserialize, Debug)]
 pub struct OrderBook {
-  pub bids: Vec<(f64, f64)>,
-  pub asks: Vec<(f64, f64)>
+  pub bids: Vec<(d128, d128)>,
+  pub asks: Vec<(d128, d128)>
+}
+
+#[derive(Debug, PartialEq, PartialOrd)]
+pub struct Transaction {
+  pub timestamp: i64,
+  pub id: i64,
+  /// The price that was paid per bitcoin.
+  pub price: f64,
+  /// The bitcoin amount sold.
+  pub amount: f64
+}
+
+type TransactionVisitor = TupleVisitor4<i64, i64, f64, f64>; 
+
+impl Deserialize for Transaction {
+  fn deserialize<D: Deserializer>(d: &mut D) -> Result<Transaction, D::Error>{
+    let tuple = try!(d.deserialize(TransactionVisitor::new()));
+    Ok(Transaction{ timestamp: tuple.0, id: tuple.1, price: tuple.2, amount: tuple.3 })
+  }
 }
 
 #[derive(Deserialize, Debug)]
@@ -208,7 +224,9 @@ impl<'a> Api<'a> {
     self.get("btc_usd/market/order_book", vec![])
   }
 
-  //pub fn transactions() -> CursResult<
+  pub fn transactions(&self) -> CursResult<Vec<Transaction>> {
+    self.get("btc_usd/market/transactions", vec![])
+  }
 
   pub fn profile(&self) -> CursResult<Profile> {
     self.private_get("private/profile", vec![])
