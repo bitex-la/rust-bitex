@@ -35,16 +35,20 @@ macro_rules! make_order_endpoint {
 
     impl <'a> $api<'a> {
       pub fn show(&self, id: i64) -> CursResult<$name> {
-        self.api.private_get(&["private/", $endpoint_name, "/", &*(id.to_string())].concat(), vec![])
+        self.api.private_get(&*format!("private/{}/{}", $endpoint_name, id), vec![])
       }
 
       pub fn create(&self, amount: d128, price: d128) -> CursResult<$name> {
-        self.api.private_post("private/bids",
+        self.api.private_post(&*format!("private/{}", $endpoint_name),
           vec![("amount", &*amount.to_string()), ("price", &*price.to_string())])
+      }
+
+      pub fn cancel(&self, id: i64) -> CursResult<$name> {
+        self.api.private_post(&*format!("private/{}/{}/cancel", $endpoint_name, id), vec![])
       }
     }
 
-    #[derive(Debug)]
+    #[derive(Debug, PartialEq)]
     pub struct $name {
       pub id: i64,
       pub creation: i64,
@@ -93,7 +97,7 @@ macro_rules! make_order_endpoint {
 make_order_endpoint!{ Bid, BidsApi, 1, "bids" }
 make_order_endpoint!{ Ask, AsksApi, 2, "asks" }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Order {
   Bid(Bid),
   Ask(Ask)
@@ -135,7 +139,7 @@ impl Deserialize for Transaction {
   }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, PartialEq)]
 pub struct Profile {
   pub usd_balance: d128,
   pub usd_reserved: d128,
@@ -177,7 +181,7 @@ impl<'a> Api<'a> {
   }
 
   fn url(&self, endpoint: &str) -> String {
-    [self.url_base, "/api-v1/rest/", endpoint].concat()
+    format!("{}/api-v1/rest/{}", self.url_base, endpoint)
   }
 
   fn add_key<'b>(&'b self, params: Params<'b>) -> Params<'b> {
