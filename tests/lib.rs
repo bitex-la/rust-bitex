@@ -1,8 +1,8 @@
 #[macro_use]
-extern crate decimal;
 extern crate bitex;
 extern crate http_stub;
 
+use std::{thread, time};
 use http_stub as hs;
 use bitex::{Api, OrderBook, Transaction, Profile, Order, Bid, Ask};
 
@@ -15,10 +15,11 @@ fn gets_orderbook(){
       hs::Mime(hs::TopLevel::Application, hs::SubLevel::Json, vec![])));
     stub.send_body(r#"{"bids":[[500.0,1],[490.0,2]], "asks":[[510.0,1],[520.0,2]]}"#);
   });
+  thread::sleep(time::Duration::from_millis(100));
 
   let OrderBook{bids, asks} = Api::new(&url).orderbook().unwrap();
-  assert_eq!(bids[0], (d128!(500), d128!(1)));
-  assert_eq!(asks[1], (d128!(520), d128!(2)));
+  assert_eq!(bids[0], (500.0, 1.0));
+  assert_eq!(asks[1], (520.0, 2.0));
 }
 
 #[test]
@@ -33,11 +34,12 @@ fn gets_transactions(){
       [1461469100, 60643, 453.71, 0.011]
     ]"#);
   });
+  thread::sleep(time::Duration::from_millis(100));
 
   let ts : Vec<Transaction> = Api::new(&url).transactions().unwrap();
 
-  assert_eq!(ts[0].amount, d128!(0.01119999));
-  assert_eq!(ts[1].amount, d128!(0.01100000));
+  assert_eq!(ts[0].amount, 0.01119999);
+  assert_eq!(ts[1].amount, 0.01100000);
 }
 
 #[test]
@@ -59,17 +61,18 @@ fn gets_profile(){
       "more_mt_deposit_code": "BITEX0000000"
     }"#);
   });
+  thread::sleep(time::Duration::from_millis(100));
 
   let profile: Profile = Api::new(&url).key("bogus").profile().unwrap();
 
   assert_eq!(profile, Profile{
-    usd_balance: d128!(10000.00),
-    usd_reserved: d128!(2000.00),
-    usd_available: d128!(8000.00),
-    btc_balance: d128!(20.00),
-    btc_reserved: d128!(5.00),
-    btc_available: d128!(15.00),
-    fee: d128!(0.5),
+    usd_balance: 10000.00,
+    usd_reserved: 2000.00,
+    usd_available: 8000.00,
+    btc_balance: 20.00,
+    btc_reserved: 5.00,
+    btc_available: 15.00,
+    fee: 0.5,
     btc_deposit_address: "1ABCD".to_string(),
     more_mt_deposit_code: "BITEX0000000".to_string(),
   });
@@ -87,6 +90,7 @@ fn gets_orders(){
       [2, 12345678, 946685400, 1, 200.00, 20.00, 2000.00, 1, 0, 1.1, "ApiKey#2", 0.01]
     ]"#);
   });
+  thread::sleep(time::Duration::from_millis(100));
 
   let orders: Vec<Order> = Api::new(&url).key("bogus").orders().unwrap();
 
@@ -95,27 +99,27 @@ fn gets_orders(){
       id: 12345678,
       creation: 946685400,
       orderbook: 1,
-      amount_to_spend: d128!(100),
-      remaining_amount: d128!(10),
-      price: d128!(1000),
+      amount_to_spend: 100.0,
+      remaining_amount: 10.0,
+      price: 1000.0,
       status: 1,
       cancelation_reason: 0,
-      produced_amount: d128!(1.1),
+      produced_amount: 1.1,
       issuer: Some("ApiKey#1".to_string()),
-      fees_paid: d128!(0.01)
+      fees_paid: 0.01
     }),
     Order::Ask(Ask{
       id: 12345678,
       creation: 946685400,
       orderbook: 1,
-      amount_to_spend: d128!(200),
-      remaining_amount: d128!(20),
-      price: d128!(2000),
+      amount_to_spend: 200.0,
+      remaining_amount: 20.0,
+      price: 2000.0,
       status: 1,
       cancelation_reason: 0,
-      produced_amount: d128!(1.1),
+      produced_amount: 1.1,
       issuer: Some("ApiKey#2".to_string()),
-      fees_paid: d128!(0.01)
+      fees_paid: 0.01
     })
   ]);
 }
@@ -133,21 +137,22 @@ fn places_a_bid(){
       [1, 12345678, 946685400, 1, 100.00, 10.00, 1000.00, 1, 0, 1.1, "ApiKey#1", 0.01]
     "#);
   });
+  thread::sleep(time::Duration::from_millis(100));
 
-  let bid: Bid = Api::new(&url).key("bogus").bids().create(d128!(100), d128!(10)).unwrap();
+  let bid: Bid = Api::new(&url).key("bogus").bids().create(100.0, 10.0).unwrap();
 
   assert_eq!(bid, Bid{
     id: 12345678,
     creation: 946685400,
     orderbook: 1,
-    amount_to_spend: d128!(100),
-    remaining_amount: d128!(10),
-    price: d128!(1000),
+    amount_to_spend: 100.0,
+    remaining_amount: 10.0,
+    price: 1000.0,
     status: 1,
     cancelation_reason: 0,
-    produced_amount: d128!(1.1),
+    produced_amount: 1.1,
     issuer: Some("ApiKey#1".to_string()),
-    fees_paid: d128!(0.01)
+    fees_paid: 0.01
   });
 }
 
@@ -162,6 +167,7 @@ fn finds_a_bid(){
       [1, 12345678, 946685400, 1, 100.00, 10.00, 1000.00, 1, 0, 1.1, "ApiKey#1", 0.01]
     "#);
   });
+  thread::sleep(time::Duration::from_millis(100));
 
   let bid: Bid = Api::new(&url).key("bogus").bids().show(1).unwrap();
 
@@ -169,14 +175,14 @@ fn finds_a_bid(){
     id: 12345678,
     creation: 946685400,
     orderbook: 1,
-    amount_to_spend: d128!(100),
-    remaining_amount: d128!(10),
-    price: d128!(1000),
+    amount_to_spend: 100.0,
+    remaining_amount: 10.0,
+    price: 1000.0,
     status: 1,
     cancelation_reason: 0,
-    produced_amount: d128!(1.1),
+    produced_amount: 1.1,
     issuer: Some("ApiKey#1".to_string()),
-    fees_paid: d128!(0.01)
+    fees_paid: 0.01
   });
 }
 
@@ -191,6 +197,7 @@ fn cancels_a_bid(){
       [1, 12345678, 946685400, 1, 100.00, 10.00, 1000.00, 1, 0, 1.1, "ApiKey#1", 0.01]
     "#);
   });
+  thread::sleep(time::Duration::from_millis(100));
 
   let bid: Bid = Api::new(&url).key("bogus").bids().cancel(1).unwrap();
 
@@ -198,14 +205,14 @@ fn cancels_a_bid(){
     id: 12345678,
     creation: 946685400,
     orderbook: 1,
-    amount_to_spend: d128!(100),
-    remaining_amount: d128!(10),
-    price: d128!(1000),
+    amount_to_spend: 100.0,
+    remaining_amount: 10.0,
+    price: 1000.0,
     status: 1,
     cancelation_reason: 0,
-    produced_amount: d128!(1.1),
+    produced_amount: 1.1,
     issuer: Some("ApiKey#1".to_string()),
-    fees_paid: d128!(0.01)
+    fees_paid: 0.01
   });
 }
 
@@ -222,21 +229,22 @@ fn places_a_ask(){
       [2, 12345678, 946685400, 1, 100.00, 10.00, 1000.00, 1, 0, 1.1, "ApiKey#1", 0.01]
     "#);
   });
+  thread::sleep(time::Duration::from_millis(100));
 
-  let ask: Ask = Api::new(&url).key("bogus").asks().create(d128!(100), d128!(10)).unwrap();
+  let ask: Ask = Api::new(&url).key("bogus").asks().create(100.0, 10.0).unwrap();
 
   assert_eq!(ask, Ask{
     id: 12345678,
     creation: 946685400,
     orderbook: 1,
-    amount_to_spend: d128!(100),
-    remaining_amount: d128!(10),
-    price: d128!(1000),
+    amount_to_spend: 100.0,
+    remaining_amount: 10.0,
+    price: 1000.0,
     status: 1,
     cancelation_reason: 0,
-    produced_amount: d128!(1.1),
+    produced_amount: 1.1,
     issuer: Some("ApiKey#1".to_string()),
-    fees_paid: d128!(0.01)
+    fees_paid: 0.01
   });
 }
 
@@ -251,6 +259,7 @@ fn finds_an_ask(){
       [2, 12345678, 946685400, 1, 100.00, 10.00, 1000.00, 1, 0, 1.1, "ApiKey#1", 0.01]
     "#);
   });
+  thread::sleep(time::Duration::from_millis(100));
 
   let ask: Ask = Api::new(&url).key("bogus").asks().show(1).unwrap();
 
@@ -258,14 +267,14 @@ fn finds_an_ask(){
     id: 12345678,
     creation: 946685400,
     orderbook: 1,
-    amount_to_spend: d128!(100),
-    remaining_amount: d128!(10),
-    price: d128!(1000),
+    amount_to_spend: 100.0,
+    remaining_amount: 10.0,
+    price: 1000.0,
     status: 1,
     cancelation_reason: 0,
-    produced_amount: d128!(1.1),
+    produced_amount: 1.1,
     issuer: Some("ApiKey#1".to_string()),
-    fees_paid: d128!(0.01)
+    fees_paid: 0.01
   });
 }
 
@@ -280,6 +289,7 @@ fn cancels_an_ask(){
       [2, 12345678, 946685400, 1, 100.00, 10.00, 1000.00, 1, 0, 1.1, "ApiKey#1", 0.01]
     "#);
   });
+  thread::sleep(time::Duration::from_millis(100));
 
   let ask: Ask = Api::new(&url).key("bogus").asks().cancel(1).unwrap();
 
@@ -287,14 +297,14 @@ fn cancels_an_ask(){
     id: 12345678,
     creation: 946685400,
     orderbook: 1,
-    amount_to_spend: d128!(100),
-    remaining_amount: d128!(10),
-    price: d128!(1000),
+    amount_to_spend: 100.0,
+    remaining_amount: 10.0,
+    price: 1000.0,
     status: 1,
     cancelation_reason: 0,
-    produced_amount: d128!(1.1),
+    produced_amount: 1.1,
     issuer: Some("ApiKey#1".to_string()),
-    fees_paid: d128!(0.01)
+    fees_paid: 0.01
   });
 }
 
